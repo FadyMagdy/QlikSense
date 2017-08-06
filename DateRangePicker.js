@@ -112,6 +112,7 @@ define(["qlik", "jquery", "./lib/moment.min", "./CalendarSettings", "css!./css/s
                 var minDate = moment(layout.props.minDate,"MM/DD/YYYY");
                 var maxDate = moment(layout.props.maxDate,"MM/DD/YYYY");
                 var startDate = moment(layout.props.startDate,"MM/DD/YYYY");
+				var endDate = moment(layout.props.endDate,"MM/DD/YYYY");
 
                 moment.locale(layout.props.locale);
 
@@ -156,6 +157,9 @@ define(["qlik", "jquery", "./lib/moment.min", "./CalendarSettings", "css!./css/s
                 if(startDate.isValid()){
                   config.startDate = startDate
                 }
+				if(endDate.isValid()){
+                  config.endDate = endDate
+                }
                
                 if (layout.props.CustomRangesEnabled) {
                     config.locale.customRangeLabel = layout.props.customRangeLabel;
@@ -169,15 +173,15 @@ define(["qlik", "jquery", "./lib/moment.min", "./CalendarSettings", "css!./css/s
                 }
 
                 $('#' + dateRangeId).daterangepicker(config,
-                    function (start, end, label) {
-                        if (start.isValid() && end.isValid()) {
-                            SelectRange(start, end)
+                    function (start, endDate, label) {
+                        if (start.isValid() && endDate.isValid()) {
+                            SelectRange(start, moment(layout.props.endDate,"MM/DD/YYYY"))
                         }
                     });
 
                 UpdateText(null, null)
 
-                checkSelections();
+                checkSelections(endDate);
 
                 function SelectRange(start, end) {
                     qlik.currApp().getAppLayout().then(function (app) {
@@ -192,7 +196,7 @@ define(["qlik", "jquery", "./lib/moment.min", "./CalendarSettings", "css!./css/s
 
                 };
 
-                function checkSelections() {
+                function checkSelections(maxDate) {
                     var requestPage = [{
                         qTop: 0,
                         qLeft: 0,
@@ -207,7 +211,7 @@ define(["qlik", "jquery", "./lib/moment.min", "./CalendarSettings", "css!./css/s
                     if (layout.qListObject.qDimensionInfo.qStateCounts.qSelected > 0) {
                         self.backendApi.getData(requestPage).then(function (dataPages) {
                             var start = fromOADate(dataPages[0].qMatrix[0][0].qNum),
-                                end = fromOADate(dataPages[0].qMatrix[dataPages[0].qMatrix.length - 1][0].qNum),
+                                end = maxDate, //fromOADate(dataPages[0].qMatrix[dataPages[0].qMatrix.length - 1][0].qNum),
                                 rows = dataPages[0].qMatrix.length;
 
                             UpdateText(start, end);
@@ -227,11 +231,14 @@ define(["qlik", "jquery", "./lib/moment.min", "./CalendarSettings", "css!./css/s
                     var _start = start || _dummy;
                     var _end = end || _dummy;
                     var _startDate = moment();
+					var _endDate = moment();
                     
                     if(startDate.isValid()){
                         _startDate = startDate;
                     }
-
+					if(endDate.isValid()){
+                        _endDate = endDate;
+                    }
                     if (_start._i.toString() !== 'Invalid Date' && _end._i.toString() !== 'Invalid Date') {
 
                         $('#' + dateRangeId).data('daterangepicker').setStartDate(start._i);
@@ -247,9 +254,11 @@ define(["qlik", "jquery", "./lib/moment.min", "./CalendarSettings", "css!./css/s
                     }
                     else {
                         $('#' + dateRangeId).data('daterangepicker').setStartDate(_startDate);
-                        $('#' + dateRangeId).data('daterangepicker').setEndDate(null);
+                        $('#' + dateRangeId).data('daterangepicker').setEndDate(_endDate);
                         $('#' + dateRangeId + ' span').html(layout.props.defaultText)
                     }
+					
+					
                 };
        
                 // from moment-msdate.js
