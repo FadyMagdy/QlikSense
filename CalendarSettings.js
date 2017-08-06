@@ -39,6 +39,12 @@ define([], function() {
                             type: "string",
                             expression: "optional"
                         },
+						endDate: {
+                            ref: "props.endDate",
+                            label: "End Date MM/DD/YYYY",
+                            type: "string",
+                            expression: "optional"
+                        },
                         CustomRangesSwitch:{
                             type: "boolean",
                             component: "switch",
